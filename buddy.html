@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Buddy - Chrome Extension</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            width: 350px;
+            min-height: 500px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: rgba(255, 255, 255, 0.9);
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .nav-tab {
+            flex: 1;
+            padding: 12px 8px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+
+        .nav-tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            background: white;
+        }
+
+        .nav-tab:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .content {
+            padding: 20px;
+            background: white;
+            min-height: 400px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Tasks Tab */
+        .task-input {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .task-input input {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .task-input input:focus {
+            border-color: #667eea;
+        }
+
+        .add-btn {
+            padding: 10px 15px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.3s ease;
+        }
+
+        .add-btn:hover {
+            background: #5a6fd8;
+        }
+
+        .task-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .task-item:hover {
+            background: #e9ecef;
+        }
+
+        .task-item.completed {
+            opacity: 0.6;
+            text-decoration: line-through;
+        }
+
+        .task-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .task-text {
+            flex: 1;
+            font-size: 14px;
+        }
+
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        /* Timer Tab */
+        .timer-container {
+            text-align: center;
+        }
+
+        .timer-display {
+            font-size: 48px;
+            font-weight: bold;
+            color: #667eea;
+            margin: 30px 0;
+            font-family: 'Courier New', monospace;
+        }
+
+        .timer-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .timer-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .start-btn {
+            background: #28a745;
+            color: white;
+        }
+
+        .start-btn:hover {
+            background: #218838;
+        }
+
+        .pause-btn {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .pause-btn:hover {
+            background: #e0a800;
+        }
+
+        .reset-btn {
+            background: #dc3545;
+            color: white;
+        }
+
+        .reset-btn:hover {
+            background: #c82333;
+        }
+
+        .timer-presets {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .preset-btn {
+            padding: 8px 12px;
+            background: #e9ecef;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.3s ease;
+        }
+
+        .preset-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        /* Notes Tab */
+        .notes-input {
+            margin-bottom: 15px;
+        }
+
+        .notes-input input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .notes-input textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            resize: vertical;
+            min-height: 80px;
+            font-size: 14px;
+            outline: none;
+            font-family: inherit;
+        }
+
+        .notes-input input:focus,
+        .notes-input textarea:focus {
+            border-color: #667eea;
+        }
+
+        .note-item {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .note-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .note-content {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        .note-date {
+            font-size: 11px;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        /* Grades Tab */
+        .grade-input {
+            display: grid;
+            grid-template-columns: 1fr 80px;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .grade-input input {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .grade-input input:focus {
+            border-color: #667eea;
+        }
+
+        .grade-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .grade-subject {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .grade-score {
+            font-weight: bold;
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: white;
+        }
+
+        .grade-a { background: #28a745; }
+        .grade-b { background: #17a2b8; }
+        .grade-c { background: #ffc107; color: #333; }
+        .grade-d { background: #fd7e14; }
+        .grade-f { background: #dc3545; }
+
+        .gpa-display {
+            text-align: center;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .gpa-label {
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .gpa-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            margin-top: 40px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">📚 Student Buddy</div>
+        <div class="subtitle">Your Academic Companion</div>
+    </div>
+
+    <div class="nav-tabs">
+        <div class="nav-tab active" onclick="switchTab('tasks')">📝 Tasks</div>
+        <div class="nav-tab" onclick="switchTab('timer')">⏰ Timer</div>
+        <div class="nav-tab" onclick="switchTab('notes')">📋 Notes</div>
+        <div class="nav-tab" onclick="switchTab('grades')">📊 Grades</div>
+    </div>
+
+    <div class="content">
+        <!-- Tasks Tab -->
+        <div id="tasks" class="tab-content active">
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalTasks">0</div>
+                    <div class="stat-label">Total Tasks</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="completedTasks">0</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+            </div>
+            
+            <div class="task-input">
+                <input type="text" id="taskInput" placeholder="Add a new task..." maxlength="50">
+                <button class="add-btn" onclick="addTask()">Add</button>
+            </div>
+            
+            <div class="task-list" id="taskList">
+                <div class="empty-state">No tasks yet. Add one above!</div>
+            </div>
+        </div>
+
+        <!-- Timer Tab -->
+        <div id="timer" class="tab-content">
+            <div class="timer-container">
+                <div class="timer-display" id="timerDisplay">25:00</div>
+                
+                <div class="timer-controls">
+                    <button class="timer-btn start-btn" onclick="startTimer()">Start</button>
+                    <button class="timer-btn pause-btn" onclick="pauseTimer()">Pause</button>
+                    <button class="timer-btn reset-btn" onclick="resetTimer()">Reset</button>
+                </div>
+                
+                <div class="timer-presets">
+                    <button class="preset-btn" onclick="setTimer(25)">25 min</button>
+                    <button class="preset-btn" onclick="setTimer(15)">15 min</button>
+                    <button class="preset-btn" onclick="setTimer(5)">5 min</button>
+                    <button class="preset-btn" onclick="setTimer(1)">1 min</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notes Tab -->
+        <div id="notes" class="tab-content">
+            <div class="notes-input">
+                <input type="text" id="noteTitle" placeholder="Note title..." maxlength="30">
+                <textarea id="noteContent" placeholder="Write your note here..."></textarea>
+                <button class="add-btn" onclick="addNote()" style="width: 100%; margin-top: 8px;">Save Note</button>
+            </div>
+            
+            <div id="notesList">
+                <div class="empty-state">No notes yet. Create one above!</div>
+            </div>
+        </div>
+
+        <!-- Grades Tab -->
+        <div id="grades" class="tab-content">
+            <div class="grade-input">
+                <input type="text" id="subjectInput" placeholder="Subject name..." maxlength="20">
+                <input type="number" id="gradeInput" placeholder="Grade" min="0" max="100" step="0.1">
+            </div>
+            <button class="add-btn" onclick="addGrade()" style="width: 100%; margin-bottom: 15px;">Add Grade</button>
+            
+            <div id="gradesList">
+                <div class="empty-state">No grades recorded yet.</div>
+            </div>
+            
+            <div class="gpa-display" id="gpaDisplay" style="display: none;">
+                <div class="gpa-label">Current GPA</div>
+                <div class="gpa-value" id="gpaValue">0.00</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data storage
+        let tasks = JSON.parse(localStorage.getItem('studentBuddy_tasks') || '[]');
+        let notes = JSON.parse(localStorage.getItem('studentBuddy_notes') || '[]');
+        let grades = JSON.parse(localStorage.getItem('studentBuddy_grades') || '[]');
+        
+        // Timer variables
+        let timerInterval;
+        let timeLeft = 25 * 60; // 25 minutes in seconds
+        let isRunning = false;
+
+        // Tab switching
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Tasks functionality
+        function addTask() {
+            const input = document.getElementById('taskInput');
+            const text = input.value.trim();
+            
+            if (text) {
+                const task = {
+                    id: Date.now(),
+                    text: text,
+                    completed: false,
+                    createdAt: new Date().toISOString()
+                };
+                
+                tasks.unshift(task);
+                input.value = '';
+                saveTasks();
+                renderTasks();
+            }
+        }
+
+        function toggleTask(id) {
+            const task = tasks.find(t => t.id === id);
+            if (task) {
+                task.completed = !task.completed;
+                saveTasks();
+                renderTasks();
+            }
+        }
+
+        function deleteTask(id) {
+            tasks = tasks.filter(t => t.id !== id);
+            saveTasks();
+            renderTasks();
+        }
+
+        function renderTasks() {
+            const container = document.getElementById('taskList');
+            const totalEl = document.getElementById('totalTasks');
+            const completedEl = document.getElementById('completedTasks');
+            
+            totalEl.textContent = tasks.length;
+            completedEl.textContent = tasks.filter(t => t.completed).length;
+            
+            if (tasks.length === 0) {
+                container.innerHTML = '<div class="empty-state">No tasks yet. Add one above!</div>';
+                return;
+            }
+            
+            container.innerHTML = tasks.map(task => `
+                <div class="task-item ${task.completed ? 'completed' : ''}">
+                    <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''} 
+                           onchange="toggleTask(${task.id})">
+                    <span class="task-text">${task.text}</span>
+                    <button class="delete-btn" onclick="deleteTask(${task.id})">×</button>
+                </div>
+            `).join('');
+        }
+
+        function saveTasks() {
+            localStorage.setItem('studentBuddy_tasks', JSON.stringify(tasks));
+        }
+
+        // Timer functionality
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('timerDisplay').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function startTimer() {
+            if (!isRunning) {
+                isRunning = true;
+                timerInterval = setInterval(() => {
+                    timeLeft--;
+                    updateTimerDisplay();
+                    
+                    if (timeLeft <= 0) {
+                        pauseTimer();
+                        alert('⏰ Time\'s up! Great job studying!');
+                        resetTimer();
+                    }
+                }, 1000);
+            }
+        }
+
+        function pauseTimer() {
+            isRunning = false;
+            clearInterval(timerInterval);
+        }
+
+        function resetTimer() {
+            pauseTimer();
+            timeLeft = 25 * 60;
+            updateTimerDisplay();
+        }
+
+        function setTimer(minutes) {
+            pauseTimer();
+            timeLeft = minutes * 60;
+            updateTimerDisplay();
+        }
+
+        // Notes functionality
+        function addNote() {
+            const titleInput = document.getElementById('noteTitle');
+            const contentInput = document.getElementById('noteContent');
+            const title = titleInput.value.trim();
+            const content = contentInput.value.trim();
+            
+            if (title && content) {
+                const note = {
+                    id: Date.now(),
+                    title: title,
+                    content: content,
+                    createdAt: new Date().toLocaleDateString()
+                };
+                
+                notes.unshift(note);
+                titleInput.value = '';
+                contentInput.value = '';
+                saveNotes();
+                renderNotes();
+            }
+        }
+
+        function deleteNote(id) {
+            notes = notes.filter(n => n.id !== id);
+            saveNotes();
+            renderNotes();
+        }
+
+        function renderNotes() {
+            const container = document.getElementById('notesList');
+            
+            if (notes.length === 0) {
+                container.innerHTML = '<div class="empty-state">No notes yet. Create one above!</div>';
+                return;
+            }
+            
+            container.innerHTML = notes.map(note => `
+                <div class="note-item">
+                    <div class="note-title">${note.title}</div>
+                    <div class="note-content">${note.content}</div>
+                    <div class="note-date">${note.createdAt} 
+                        <button class="delete-btn" onclick="deleteNote(${note.id})" style="float: right;">×</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function saveNotes() {
+            localStorage.setItem('studentBuddy_notes', JSON.stringify(notes));
+        }
+
+        // Grades functionality
+        function addGrade() {
+            const subjectInput = document.getElementById('subjectInput');
+            const gradeInput = document.getElementById('gradeInput');
+            const subject = subjectInput.value.trim();
+            const grade = parseFloat(gradeInput.value);
+            
+            if (subject && !isNaN(grade) && grade >= 0 && grade <= 100) {
+                const gradeEntry = {
+                    id: Date.now(),
+                    subject: subject,
+                    grade: grade,
+                    createdAt: new Date().toLocaleDateString()
+                };
+                
+                grades.push(gradeEntry);
+                subjectInput.value = '';
+                gradeInput.value = '';
+                saveGrades();
+                renderGrades();
+            }
+        }
+
+        function deleteGrade(id) {
+            grades = grades.filter(g => g.id !== id);
+            saveGrades();
+            renderGrades();
+        }
+
+        function getGradeClass(grade) {
+            if (grade >= 90) return 'grade-a';
+            if (grade >= 80) return 'grade-b';
+            if (grade >= 70) return 'grade-c';
+            if (grade >= 60) return 'grade-d';
+            return 'grade-f';
+        }
+
+        function calculateGPA() {
+            if (grades.length === 0) return 0;
+            const total = grades.reduce((sum, grade) => sum + grade.grade, 0);
+            return (total / grades.length / 25).toFixed(2); // Convert to 4.0 scale
+        }
+
+        function renderGrades() {
+            const container = document.getElementById('gradesList');
+            const gpaDisplay = document.getElementById('gpaDisplay');
+            const gpaValue = document.getElementById('gpaValue');
+            
+            if (grades.length === 0) {
+                container.innerHTML = '<div class="empty-state">No grades recorded yet.</div>';
+                gpaDisplay.style.display = 'none';
+                return;
+            }
+            
+            container.innerHTML = grades.map(grade => `
+                <div class="grade-item">
+                    <span class="grade-subject">${grade.subject}</span>
+                    <span class="grade-score ${getGradeClass(grade.grade)}">${grade.grade}%
+                        <button class="delete-btn" onclick="deleteGrade(${grade.id})" style="margin-left: 8px;">×</button>
+                    </span>
+                </div>
+            `).join('');
+            
+            gpaDisplay.style.display = 'block';
+            gpaValue.textContent = calculateGPA();
+        }
+
+        function saveGrades() {
+            localStorage.setItem('studentBuddy_grades', JSON.stringify(grades));
+        }
+
+        // Enter key handlers
+        document.getElementById('taskInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') addTask();
+        });
+
+        document.getElementById('noteContent').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && e.ctrlKey) addNote();
+        });
+
+        document.getElementById('gradeInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') addGrade();
+        });
+
+        // Initialize
+        renderTasks();
+        renderNotes();
+        renderGrades();
+        updateTimerDisplay();
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97014c53942cd3d4',t:'MTc1NTM1MTE1MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
